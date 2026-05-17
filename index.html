@@ -3,43 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PC Creator 2 - Web Game</title>
+    <title>PC Creator 2 - Deluxe Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app">
         <header>
-            <h1>🖥️ PC CREATOR 2</h1>
-            <div class="client-card" id="clientCard">
-                <div class="client-avatar">🧑‍💼</div>
-                <div class="client-info">
-                    <div id="clientName">Klien: Gamers Gl</div>
-                    <div id="clientRequest">Budget: Rp 18.000.000 | Gaming + Editing</div>
-                    <div id="clientRequirements">Minimal: RAM 16GB, GPU RTX 3060 / RX 6600</div>
+            <div class="top-bar">
+                <h1>🖥️ PC CREATOR 2</h1>
+                <div class="stats-header">
+                    <div>💰 Uang: <span id="money">Rp 20.000.000</span></div>
+                    <div>⭐ Level: <span id="level">1</span></div>
+                    <div>📊 XP: <span id="xp">0</span> / <span id="xpNext">100</span></div>
+                </div>
+            </div>
+            <div class="client-area">
+                <div class="client-card" id="clientCard">
+                    <div class="client-avatar" id="clientAvatar">🧑‍💼</div>
+                    <div class="client-info">
+                        <div id="clientName">Klien: Random</div>
+                        <div id="clientRequest">Budget: Rp 0 | Kebutuhan: -</div>
+                        <div id="clientRequirements">Minimal: RAM 0GB, GPU tier -</div>
+                    </div>
+                    <button id="skipClientBtn" class="skip-btn">⏩ Skip (Biaya 500k)</button>
                 </div>
             </div>
         </header>
 
-        <div class="game-container">
-            <div class="shop-panel">
-                <h2>🛒 Toko Komponen</h2>
-                <div id="componentsList" class="components-grid"></div>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="shop">🛒 Toko</button>
+            <button class="tab-btn" data-tab="storage">📦 Storage</button>
+        </div>
 
-            <div class="build-panel">
-                <h2>⚙️ Rakitanku</h2>
-                <div class="specs-summary">
-                    <div>💰 Total Harga: <span id="totalPrice">Rp 0</span></div>
-                    <div>⚡ Konsumsi Daya: <span id="totalPower">0</span> W</div>
-                    <div>🔌 PSU Terpasang: <span id="psuWattage">0</span> W</div>
-                </div>
-                <div id="pcSlots" class="pc-slots"></div>
-                <button id="evaluateBtn">✅ Evaluasi & Kirim ke Klien</button>
-                <div id="resultMessage" class="result-message"></div>
-                <button id="resetBuildBtn" class="reset-btn">🔄 Reset Rakitan</button>
+        <div class="tab-content active" id="tab-shop">
+            <div class="shop-controls">
+                <select id="categoryFilter">
+                    <option value="all">Semua Kategori</option>
+                    <option value="cpu">CPU</option>
+                    <option value="motherboard">Motherboard</option>
+                    <option value="ram">RAM</option>
+                    <option value="gpu">GPU</option>
+                    <option value="storage">Storage</option>
+                    <option value="psu">PSU</option>
+                </select>
             </div>
+            <div id="shopComponents" class="components-grid"></div>
+        </div>
+
+        <div class="tab-content" id="tab-storage">
+            <h2>📦 Komponen Milikmu</h2>
+            <div id="storageList" class="components-grid"></div>
+        </div>
+
+        <div class="build-area">
+            <h2>⚙️ Rakit PC (Drag & Drop dari Toko atau Storage)</h2>
+            <div class="specs-summary">
+                <div>💰 Total Harga Rakitan: <span id="buildPrice">Rp 0</span></div>
+                <div>⚡ Konsumsi Daya: <span id="buildPower">0</span> W</div>
+                <div>🔌 PSU Terpasang: <span id="buildPsuWatt">0</span> W</div>
+            </div>
+            <div id="pcSlots" class="pc-slots" dropzone="move"></div>
+            <div class="action-buttons">
+                <button id="evaluateBtn">✅ Evaluasi & Kirim ke Klien</button>
+                <button id="resetBuildBtn">🔄 Reset Rakitan</button>
+            </div>
+            <div id="gameMessage" class="result-message"></div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="components.js"></script>
+    <script src="clients.js"></script>
+    <script src="storage.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
