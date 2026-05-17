@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PC Creator 2 - Web Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>🖥️ PC CREATOR 2</h1>
+            <div class="client-card" id="clientCard">
+                <div class="client-avatar">🧑‍💼</div>
+                <div class="client-info">
+                    <div id="clientName">Klien: Gamers Gl</div>
+                    <div id="clientRequest">Budget: Rp 18.000.000 | Gaming + Editing</div>
+                    <div id="clientRequirements">Minimal: RAM 16GB, GPU RTX 3060 / RX 6600</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-container">
+            <div class="shop-panel">
+                <h2>🛒 Toko Komponen</h2>
+                <div id="componentsList" class="components-grid"></div>
+            </div>
+
+            <div class="build-panel">
+                <h2>⚙️ Rakitanku</h2>
+                <div class="specs-summary">
+                    <div>💰 Total Harga: <span id="totalPrice">Rp 0</span></div>
+                    <div>⚡ Konsumsi Daya: <span id="totalPower">0</span> W</div>
+                    <div>🔌 PSU Terpasang: <span id="psuWattage">0</span> W</div>
+                </div>
+                <div id="pcSlots" class="pc-slots"></div>
+                <button id="evaluateBtn">✅ Evaluasi & Kirim ke Klien</button>
+                <div id="resultMessage" class="result-message"></div>
+                <button id="resetBuildBtn" class="reset-btn">🔄 Reset Rakitan</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
