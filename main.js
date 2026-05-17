@@ -64,7 +64,7 @@ function addXP(amount) {
 }
 
 async function randomReward() {
-    const rewardCount = Math.floor(Math.random() * 3); // 0,1,2
+    const rewardCount = Math.floor(Math.random() * 3);
     if (rewardCount === 0) return [];
     const shuffled = [...componentsDatabase];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -110,17 +110,18 @@ function evaluateBuild() {
     }
     const xpGain = Math.floor(Math.random() * 11) + 5;
     addXP(xpGain);
-    const rewardComps = await randomReward();
-    let rewardMsg = "";
-    if (rewardComps.length > 0) {
-        rewardMsg = ` + Mendapat komponen: ${rewardComps.map(c=>c.name).join(", ")}`;
-    }
-    document.getElementById("gameMessage").innerHTML = `🎉 Pesanan selesai! +${xpGain} XP. ${rewardMsg} 🎉`;
-    document.getElementById("gameMessage").style.background = "#216b49";
-    playerMoney += currentClient.budget;
-    updateUIStats();
-    saveGame();
-    nextClient();
+    randomReward().then(rewardComps => {
+        let rewardMsg = "";
+        if (rewardComps.length > 0) {
+            rewardMsg = ` + Mendapat komponen: ${rewardComps.map(c=>c.name).join(", ")}`;
+        }
+        document.getElementById("gameMessage").innerHTML = `🎉 Pesanan selesai! +${xpGain} XP. ${rewardMsg} 🎉`;
+        document.getElementById("gameMessage").style.background = "#216b49";
+        playerMoney += currentClient.budget;
+        updateUIStats();
+        saveGame();
+        nextClient();
+    });
 }
 
 function nextClient() {
@@ -216,7 +217,7 @@ function setupDragDropSlots() {
                         saveGame();
                         showTemporaryMessage(`Membeli ${comp.name}`, "#3a6e4a");
                     } else {
-                        showTemporaryMessage(`Slot ${slotKey} tidak bisa dipasang komponen ini (kompatibilitas?)`, "#a55a3a");
+                        showTemporaryMessage(`Slot ${slotKey} tidak bisa dipasang komponen ini`, "#a55a3a");
                     }
                 } else {
                     showTemporaryMessage("Uang tidak cukup!", "#a55a3a");
