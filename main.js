@@ -6,7 +6,6 @@ let playerLevel = 1;
 let playerXP = 0;
 let xpNeeded = 100;
 let currentClient = null;
-let dragData = null;
 
 function formatRupiah(amount) {
     return "Rp " + amount.toLocaleString("id-ID");
@@ -76,15 +75,65 @@ async function randomReward() {
     return rewards;
 }
 
+// Fungsi untuk memasang komponen ke slot tertentu
+function installComponent(comp, source) {
+    // Tentukan slot berdasarkan kategori komponen
+    let slotKey = null;
+    if (comp.category === "cpu") slotKey = "cpu";
+    else if (comp.category === "motherboard") slotKey = "motherboard";
+    else if (comp.category === "ram") slotKey = "ram";
+    else if (comp.category === "gpu") slotKey = "gpu";
+    else if (comp.category === "storage") slotKey = "storage";
+    else if (comp.category === "psu") slotKey = "psu";
+    if (!slotKey) return false;
+
+    // Cek apakah slot sudah terisi
+    const currentPart = currentBuild[slotKey];
+    let proceed = true;
+    if (currentPart !== null) {
+        proceed = confirm(`Slot ${slotKey.toUpperCase()} sudah terisi dengan ${currentPart.name}. Ganti dengan ${comp.name}?`);
+    }
+    if (!proceed) return false;
+
+    // Jika dari toko, kurangi uang dulu
+    if (source === "shop") {
+        if (playerMoney >= comp.price) {
+            playerMoney -= comp.price;
+            updateUIStats();
+            saveGame();
+            showTemporaryMessage(`✅ Membeli ${comp.name} dan memasang ke ${slotKey.toUpperCase()}`, "#3a6e4a");
+        } else {
+            showTemporaryMessage(`Uang tidak cukup untuk membeli ${comp.name}!`, "#a55a3a");
+            return false;
+        }
+    } else if (source === "storage") {
+        showTemporaryMessage(`🔧 Memasang ${comp.name} dari storage ke ${slotKey.toUpperCase()}`, "#3a6e4a");
+    }
+
+    // Jika slot sebelumnya terisi, kita perlu mengembalikan komponen lama ke storage (kecuali jika dari storage? Aturan: komponen yang diganti masuk storage)
+    if (currentPart !== null) {
+        addComponentToStorage(currentPart);
+        showTemporaryMessage(`Komponen ${currentPart.name} dipindahkan ke storage`, "#7a5a2a");
+    }
+
+    // Pasang komponen baru
+    currentBuild[slotKey] = comp;
+    renderBuildSlots();
+    updateCompatibilityMessage();
+    saveGame();
+    return true;
+}
+
+// Membeli komponen langsung (tanpa memasang) -> masuk storage
 function buyComponent(comp) {
     if (playerMoney >= comp.price) {
-        const confirmMsg = `Beli ${comp.name} seharga ${formatRupiah(comp.price)}?`;
+        const confirmMsg = `Beli ${comp.name} seharga ${formatRupiah(comp.price)}? Komponen akan disimpan di Storage.`;
         if (confirm(confirmMsg)) {
             playerMoney -= comp.price;
             addComponentToStorage({ ...comp });
             updateUIStats();
             saveGame();
-            showTemporaryMessage(`✅ Berhasil membeli ${comp.name}`, "#3a6e4a");
+            showTemporaryMessage(`✅ Berhasil membeli ${comp.name} (tersimpan di Storage)`, "#3a6e4a");
         } else {
             showTemporaryMessage("Pembelian dibatalkan", "#7a5a2a");
         }
@@ -178,109 +227,94 @@ function renderShop() {
     filtered.forEach(comp => {
         const card = document.createElement("div");
         card.className = "comp-card";
-        card.setAttribute("draggable", "true");
-        card.setAttribute("data-component", JSON.stringify(comp));
         card.innerHTML = `
             <div class="comp-name">${comp.name}</div>
             <div class="comp-details">
                 <span>${comp.category.toUpperCase()} ${comp.socket ? `[${comp.socket}]` : ""} ${comp.wattage ? comp.wattage+"W" : ""} ${comp.capacity ? comp.capacity+"GB" : ""}</span>
                 <span class="comp-price">${formatRupiah(comp.price)}</span>
             </div>
-            <button class="buy-btn">🛒 Beli</button>
+            <div class="card-buttons">
+                <button class="buy-btn">🛒 Beli (ke Storage)</button>
+                <button class="install-btn">🔧 Pasang</button>
+            </div>
         `;
         const buyBtn = card.querySelector(".buy-btn");
+        const installBtn = card.querySelector(".install-btn");
         buyBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             buyComponent(comp);
         });
-        card.addEventListener("dragstart", (e) => {
-            dragData = { type: "shop", component: comp };
-            e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
-            e.dataTransfer.effectAllowed = "copy";
+        installBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            installComponent(comp, "shop");
         });
         container.appendChild(card);
     });
 }
 
-function handleDragStart(e) {
-    const target = e.target.closest(".comp-card");
-    if (!target) return;
-    if (target.getAttribute("data-from") === "storage") {
-        const idx = target.getAttribute("data-component-idx");
-        dragData = { type: "storage", index: parseInt(idx) };
-    } else {
-        const compData = target.getAttribute("data-component");
-        if (compData) dragData = { type: "shop", component: JSON.parse(compData) };
+function renderStorage() {
+    const container = document.getElementById("storageList");
+    if (!container) return;
+    if (inventory.length === 0) {
+        container.innerHTML = "<div style='padding:20px; text-align:center'>Storage kosong. Beli komponen atau dapatkan reward!</div>";
+        return;
     }
-    e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
-}
-function handleDragEnd(e) { dragData = null; }
-
-function setupDragDropSlots() {
-    const slots = document.querySelectorAll(".slot-item");
-    slots.forEach(slot => {
-        slot.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            slot.classList.add("drag-over");
-        });
-        slot.addEventListener("dragleave", () => {
-            slot.classList.remove("drag-over");
-        });
-        slot.addEventListener("drop", (e) => {
-            e.preventDefault();
-            slot.classList.remove("drag-over");
-            const slotKey = slot.getAttribute("data-slot-key");
-            if (!dragData) return;
-            if (dragData.type === "shop") {
-                const comp = dragData.component;
-                if (playerMoney >= comp.price) {
-                    if (tryPlaceComponent(slotKey, comp)) {
-                        playerMoney -= comp.price;
-                        updateUIStats();
-                        saveGame();
-                        showTemporaryMessage(`Membeli ${comp.name}`, "#3a6e4a");
-                    } else {
-                        showTemporaryMessage(`Slot ${slotKey} tidak bisa dipasang komponen ini`, "#a55a3a");
-                    }
-                } else {
-                    showTemporaryMessage("Uang tidak cukup!", "#a55a3a");
-                }
-            } else if (dragData.type === "storage") {
-                const comp = inventory[dragData.index];
-                if (comp && tryPlaceComponent(slotKey, comp)) {
-                    removeComponentFromStorage(dragData.index);
-                    saveGame();
-                    showTemporaryMessage(`Memasang ${comp.name} dari storage`, "#3a6e4a");
-                } else {
-                    showTemporaryMessage("Gagal memasang komponen dari storage", "#a55a3a");
-                }
+    container.innerHTML = "";
+    inventory.forEach((comp, idx) => {
+        const card = document.createElement("div");
+        card.className = "comp-card";
+        card.innerHTML = `
+            <div class="comp-name">${comp.name}</div>
+            <div class="comp-details">
+                <span>${comp.category.toUpperCase()} ${comp.socket ? `[${comp.socket}]` : ""} ${comp.wattage ? comp.wattage+"W" : ""} ${comp.capacity ? comp.capacity+"GB" : ""}</span>
+                <span class="comp-price">${formatRupiah(comp.price)}</span>
+            </div>
+            <div class="card-buttons">
+                <button class="install-from-storage-btn">🔧 Pasang</button>
+                <button class="sell-storage-btn">💰 Jual (50% harga)</button>
+            </div>
+        `;
+        const installBtn = card.querySelector(".install-from-storage-btn");
+        const sellBtn = card.querySelector(".sell-storage-btn");
+        installBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            installComponent(comp, "storage");
+            // Hapus dari storage hanya jika berhasil dipasang (fungsi install akan menambah ke storage jika ada penggantian, tetapi komponen sumber harus dihapus)
+            // Karena installComponent akan memanggil addComponentToStorage jika ada penggantian, tapi komponen asli dari storage harus dihapus.
+            // Kita perlu menghapus setelah berhasil. installComponent mengembalikan true jika berhasil.
+            if (installComponent(comp, "storage")) {
+                // Hapus dari inventory
+                removeComponentFromStorage(idx);
+                renderStorage(); // re-render
             }
-            renderBuildSlots();
-            updateCompatibilityMessage();
-            dragData = null;
         });
+        sellBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const sellPrice = Math.floor(comp.price * 0.5);
+            if (confirm(`Jual ${comp.name} seharga ${formatRupiah(sellPrice)}?`)) {
+                playerMoney += sellPrice;
+                removeComponentFromStorage(idx);
+                updateUIStats();
+                saveGame();
+                showTemporaryMessage(`Terjual ${comp.name}`, "#3a6e4a");
+            }
+        });
+        container.appendChild(card);
     });
 }
 
-function tryPlaceComponent(slotKey, comp) {
-    const categoryMap = {
-        cpu: "cpu", motherboard: "motherboard", ram: "ram", gpu: "gpu", storage: "storage", psu: "psu"
-    };
-    const expectedCat = categoryMap[slotKey];
-    if (comp.category !== expectedCat) return false;
-    if (currentBuild[slotKey] !== null) return false;
-    if (slotKey === "cpu" && currentBuild.motherboard && currentBuild.motherboard.socket !== comp.socket) return false;
-    if (slotKey === "motherboard" && currentBuild.cpu && currentBuild.cpu.socket !== comp.socket) return false;
-    if (slotKey === "ram" && currentBuild.motherboard && currentBuild.motherboard.ramType && currentBuild.motherboard.ramType !== comp.ramType) return false;
-    currentBuild[slotKey] = comp;
-    return true;
-}
-
 function removeFromBuild(slotKey) {
-    currentBuild[slotKey] = null;
-    renderBuildSlots();
-    updateCompatibilityMessage();
-    saveGame();
+    const oldComp = currentBuild[slotKey];
+    if (oldComp) {
+        if (confirm(`Melepas ${oldComp.name} dari slot ${slotKey.toUpperCase()}? Komponen akan kembali ke Storage.`)) {
+            addComponentToStorage(oldComp);
+            currentBuild[slotKey] = null;
+            renderBuildSlots();
+            updateCompatibilityMessage();
+            saveGame();
+            showTemporaryMessage(`${oldComp.name} dipindahkan ke Storage`, "#7a5a2a");
+        }
+    }
 }
 
 function renderBuildSlots() {
@@ -297,11 +331,10 @@ function renderBuildSlots() {
     slots.forEach(slot => {
         const div = document.createElement("div");
         div.className = "slot-item";
-        div.setAttribute("data-slot-key", slot.key);
         div.innerHTML = `
             <span class="slot-label">${slot.label}</span>
             <span class="slot-value ${slot.isEmpty ? 'empty-slot' : ''}">${slot.value}</span>
-            ${!slot.isEmpty ? `<button class="mini-remove" data-key="${slot.key}">✖</button>` : ""}
+            ${!slot.isEmpty ? `<button class="mini-remove" data-key="${slot.key}">✖ Lepas</button>` : ""}
         `;
         if (!slot.isEmpty) {
             const btn = div.querySelector(".mini-remove");
@@ -312,7 +345,6 @@ function renderBuildSlots() {
         }
         container.appendChild(div);
     });
-    setupDragDropSlots();
     updateBuildPriceAndPower();
 }
 
@@ -346,11 +378,18 @@ function updateCompatibilityMessage() {
 }
 
 function resetBuild() {
-    currentBuild = { cpu: null, motherboard: null, ram: null, gpu: null, storage: null, psu: null };
-    renderBuildSlots();
-    updateCompatibilityMessage();
-    saveGame();
-    showTemporaryMessage("Rakitan direset", "#3a5a7a");
+    if (confirm("Reset seluruh rakitan? Semua komponen akan dipindahkan ke Storage.")) {
+        for (let key in currentBuild) {
+            if (currentBuild[key]) {
+                addComponentToStorage(currentBuild[key]);
+                currentBuild[key] = null;
+            }
+        }
+        renderBuildSlots();
+        updateCompatibilityMessage();
+        saveGame();
+        showTemporaryMessage("Rakitan direset, komponen tersimpan di Storage", "#3a5a7a");
+    }
 }
 
 function showTemporaryMessage(msg, bg) {
@@ -358,13 +397,11 @@ function showTemporaryMessage(msg, bg) {
     msgDiv.innerHTML = msg;
     msgDiv.style.background = bg;
     msgDiv.style.opacity = "1";
-    msgDiv.style.transition = "opacity 0.3s";
     setTimeout(() => {
         if (document.getElementById("gameMessage").innerHTML === msg) updateCompatibilityMessage();
     }, 2500);
 }
 
-// Animasi tab bergeser
 function setupTabAnimation() {
     const tabBtns = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");

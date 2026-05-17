@@ -378,3 +378,40 @@ button:hover {
 .result-message {
     transition: all 0.3s ease;
 }
+
+.card-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.buy-btn, .install-btn, .install-from-storage-btn, .sell-storage-btn {
+    background: #2d3e77;
+    border: none;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    width: auto;
+    margin: 0;
+}
+
+.buy-btn {
+    background: #2a6e3a;
+}
+
+.install-btn, .install-from-storage-btn {
+    background: #4c7eff;
+}
+
+.sell-storage-btn {
+    background: #a55a3a;
+}
+
+.buy-btn:hover, .install-btn:hover, .install-from-storage-btn:hover, .sell-storage-btn:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
