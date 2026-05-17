@@ -194,6 +194,11 @@ function evaluateBuild() {
         document.getElementById("gameMessage").style.background = "#216b49";
         playerMoney += currentClient.budget;
         updateUIStats();
+        for (let key in currentBuild) {
+            currentBuild[key] = null;
+        }
+        renderBuildSlots();
+        updateCompatibilityMessage();
         saveGame();
         nextClient();
     });
