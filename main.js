@@ -76,6 +76,23 @@ async function randomReward() {
     return rewards;
 }
 
+function buyComponent(comp) {
+    if (playerMoney >= comp.price) {
+        const confirmMsg = `Beli ${comp.name} seharga ${formatRupiah(comp.price)}?`;
+        if (confirm(confirmMsg)) {
+            playerMoney -= comp.price;
+            addComponentToStorage({ ...comp });
+            updateUIStats();
+            saveGame();
+            showTemporaryMessage(`✅ Berhasil membeli ${comp.name}`, "#3a6e4a");
+        } else {
+            showTemporaryMessage("Pembelian dibatalkan", "#7a5a2a");
+        }
+    } else {
+        showTemporaryMessage(`Uang tidak cukup! Butuh ${formatRupiah(comp.price)}`, "#a55a3a");
+    }
+}
+
 function evaluateBuild() {
     if (!currentClient) {
         document.getElementById("gameMessage").innerHTML = "Tidak ada klien aktif!";
@@ -169,7 +186,13 @@ function renderShop() {
                 <span>${comp.category.toUpperCase()} ${comp.socket ? `[${comp.socket}]` : ""} ${comp.wattage ? comp.wattage+"W" : ""} ${comp.capacity ? comp.capacity+"GB" : ""}</span>
                 <span class="comp-price">${formatRupiah(comp.price)}</span>
             </div>
+            <button class="buy-btn">🛒 Beli</button>
         `;
+        const buyBtn = card.querySelector(".buy-btn");
+        buyBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            buyComponent(comp);
+        });
         card.addEventListener("dragstart", (e) => {
             dragData = { type: "shop", component: comp };
             e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
@@ -334,9 +357,33 @@ function showTemporaryMessage(msg, bg) {
     const msgDiv = document.getElementById("gameMessage");
     msgDiv.innerHTML = msg;
     msgDiv.style.background = bg;
+    msgDiv.style.opacity = "1";
+    msgDiv.style.transition = "opacity 0.3s";
     setTimeout(() => {
         if (document.getElementById("gameMessage").innerHTML === msg) updateCompatibilityMessage();
     }, 2500);
+}
+
+// Animasi tab bergeser
+function setupTabAnimation() {
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabContents = document.querySelectorAll(".tab-content");
+    tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.dataset.tab;
+            tabContents.forEach(tab => {
+                if (tab.id === `tab-${targetId}`) {
+                    tab.style.display = "block";
+                    tab.style.animation = "slideDown 0.3s ease";
+                } else {
+                    tab.style.animation = "slideUp 0.2s ease";
+                    setTimeout(() => { tab.style.display = "none"; }, 200);
+                }
+            });
+            tabBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        });
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -351,13 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("evaluateBtn").addEventListener("click", evaluateBuild);
     document.getElementById("resetBuildBtn").addEventListener("click", resetBuild);
     document.getElementById("skipClientBtn").addEventListener("click", skipClient);
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-            document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
-        });
-    });
+    setupTabAnimation();
     window.addEventListener("beforeunload", () => saveGame());
 });
