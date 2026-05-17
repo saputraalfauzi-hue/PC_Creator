@@ -122,6 +122,29 @@ h1 {
 
 .tab-content.active {
     display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
 }
 
 .shop-controls {
@@ -150,20 +173,14 @@ h1 {
     background: #1a1f34;
     border-radius: 20px;
     padding: 12px 14px;
-    cursor: grab;
-    transition: 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     border: 1px solid #2f3a60;
-    user-select: none;
-}
-
-.comp-card:active {
-    cursor: grabbing;
+    position: relative;
 }
 
 .comp-card:hover {
-    background: #252d4e;
-    transform: translateY(-2px);
-    border-color: #6b8aff;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 .comp-name {
@@ -177,10 +194,47 @@ h1 {
     display: flex;
     justify-content: space-between;
     margin-top: 6px;
+    margin-bottom: 8px;
 }
 
 .comp-price {
     color: #ffd966;
+}
+
+.card-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.buy-btn, .install-btn, .install-from-storage-btn, .sell-storage-btn {
+    background: #2d3e77;
+    border: none;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    width: auto;
+    margin: 0;
+}
+
+.buy-btn {
+    background: #2a6e3a;
+}
+
+.install-btn, .install-from-storage-btn {
+    background: #4c7eff;
+}
+
+.sell-storage-btn {
+    background: #a55a3a;
+}
+
+.buy-btn:hover, .install-btn:hover, .install-from-storage-btn:hover, .sell-storage-btn:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
 }
 
 .pc-slots {
@@ -199,12 +253,6 @@ h1 {
     justify-content: space-between;
     align-items: center;
     border-left: 4px solid #4c7eff;
-    transition: 0.1s;
-}
-
-.slot-item.drag-over {
-    background: #2a3558;
-    border-left-color: #ffaa44;
 }
 
 .slot-label {
@@ -279,6 +327,7 @@ button:hover {
     text-align: center;
     font-weight: bold;
     background: #00000055;
+    transition: all 0.3s ease;
 }
 
 @media (max-width: 800px) {
@@ -290,128 +339,4 @@ button:hover {
         align-items: start;
         gap: 12px;
     }
-}
-
-/* Animasi tab geser */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-}
-
-.tab-content {
-    display: none;
-    transition: all 0.3s ease;
-}
-
-.tab-content.active {
-    display: block;
-    animation: slideDown 0.3s ease forwards;
-}
-
-/* Tombol beli di pojok kanan bawah */
-.comp-card {
-    position: relative;
-    padding-bottom: 40px;
-}
-
-.buy-btn {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    background: #2a6e3a;
-    border: none;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
-    width: auto;
-    margin: 0;
-}
-
-.buy-btn:hover {
-    background: #3e9e55;
-    transform: scale(1.05);
-}
-
-.buy-btn:active {
-    transform: scale(0.95);
-}
-
-/* Efek hover pada kartu komponen */
-.comp-card {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.comp-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-/* Efek drag over pada slot */
-.slot-item.drag-over {
-    background: #2a3558;
-    border-left-color: #ffaa44;
-    box-shadow: 0 0 0 2px #ffaa44;
-    transition: 0.1s;
-}
-
-/* Animasi pesan sementara */
-.result-message {
-    transition: all 0.3s ease;
-}
-
-.card-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-    justify-content: flex-end;
-}
-
-.buy-btn, .install-btn, .install-from-storage-btn, .sell-storage-btn {
-    background: #2d3e77;
-    border: none;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
-    width: auto;
-    margin: 0;
-}
-
-.buy-btn {
-    background: #2a6e3a;
-}
-
-.install-btn, .install-from-storage-btn {
-    background: #4c7eff;
-}
-
-.sell-storage-btn {
-    background: #a55a3a;
-}
-
-.buy-btn:hover, .install-btn:hover, .install-from-storage-btn:hover, .sell-storage-btn:hover {
-    transform: scale(1.02);
-    filter: brightness(1.1);
 }

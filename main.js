@@ -75,9 +75,7 @@ async function randomReward() {
     return rewards;
 }
 
-// Fungsi untuk memasang komponen ke slot tertentu
 function installComponent(comp, source) {
-    // Tentukan slot berdasarkan kategori komponen
     let slotKey = null;
     if (comp.category === "cpu") slotKey = "cpu";
     else if (comp.category === "motherboard") slotKey = "motherboard";
@@ -87,15 +85,13 @@ function installComponent(comp, source) {
     else if (comp.category === "psu") slotKey = "psu";
     if (!slotKey) return false;
 
-    // Cek apakah slot sudah terisi
     const currentPart = currentBuild[slotKey];
-    let proceed = true;
     if (currentPart !== null) {
-        proceed = confirm(`Slot ${slotKey.toUpperCase()} sudah terisi dengan ${currentPart.name}. Ganti dengan ${comp.name}?`);
+        if (!confirm(`Slot ${slotKey.toUpperCase()} sudah terisi dengan ${currentPart.name}. Ganti dengan ${comp.name}?`)) {
+            return false;
+        }
     }
-    if (!proceed) return false;
 
-    // Jika dari toko, kurangi uang dulu
     if (source === "shop") {
         if (playerMoney >= comp.price) {
             playerMoney -= comp.price;
@@ -110,13 +106,11 @@ function installComponent(comp, source) {
         showTemporaryMessage(`🔧 Memasang ${comp.name} dari storage ke ${slotKey.toUpperCase()}`, "#3a6e4a");
     }
 
-    // Jika slot sebelumnya terisi, kita perlu mengembalikan komponen lama ke storage (kecuali jika dari storage? Aturan: komponen yang diganti masuk storage)
     if (currentPart !== null) {
         addComponentToStorage(currentPart);
         showTemporaryMessage(`Komponen ${currentPart.name} dipindahkan ke storage`, "#7a5a2a");
     }
 
-    // Pasang komponen baru
     currentBuild[slotKey] = comp;
     renderBuildSlots();
     updateCompatibilityMessage();
@@ -124,11 +118,26 @@ function installComponent(comp, source) {
     return true;
 }
 
-// Membeli komponen langsung (tanpa memasang) -> masuk storage
+function installComponentFromStorage(comp) {
+    if (installComponent(comp, "storage")) {
+        removeComponentFromStorageById(comp.id);
+    }
+}
+
+function sellComponentFromStorage(comp) {
+    const sellPrice = Math.floor(comp.price * 0.5);
+    if (confirm(`Jual ${comp.name} seharga ${formatRupiah(sellPrice)}?`)) {
+        playerMoney += sellPrice;
+        removeComponentFromStorageById(comp.id);
+        updateUIStats();
+        saveGame();
+        showTemporaryMessage(`Terjual ${comp.name}`, "#3a6e4a");
+    }
+}
+
 function buyComponent(comp) {
     if (playerMoney >= comp.price) {
-        const confirmMsg = `Beli ${comp.name} seharga ${formatRupiah(comp.price)}? Komponen akan disimpan di Storage.`;
-        if (confirm(confirmMsg)) {
+        if (confirm(`Beli ${comp.name} seharga ${formatRupiah(comp.price)}? Komponen akan disimpan di Storage.`)) {
             playerMoney -= comp.price;
             addComponentToStorage({ ...comp });
             updateUIStats();
@@ -238,66 +247,13 @@ function renderShop() {
                 <button class="install-btn">🔧 Pasang</button>
             </div>
         `;
-        const buyBtn = card.querySelector(".buy-btn");
-        const installBtn = card.querySelector(".install-btn");
-        buyBtn.addEventListener("click", (e) => {
+        card.querySelector(".buy-btn").addEventListener("click", (e) => {
             e.stopPropagation();
             buyComponent(comp);
         });
-        installBtn.addEventListener("click", (e) => {
+        card.querySelector(".install-btn").addEventListener("click", (e) => {
             e.stopPropagation();
             installComponent(comp, "shop");
-        });
-        container.appendChild(card);
-    });
-}
-
-function renderStorage() {
-    const container = document.getElementById("storageList");
-    if (!container) return;
-    if (inventory.length === 0) {
-        container.innerHTML = "<div style='padding:20px; text-align:center'>Storage kosong. Beli komponen atau dapatkan reward!</div>";
-        return;
-    }
-    container.innerHTML = "";
-    inventory.forEach((comp, idx) => {
-        const card = document.createElement("div");
-        card.className = "comp-card";
-        card.innerHTML = `
-            <div class="comp-name">${comp.name}</div>
-            <div class="comp-details">
-                <span>${comp.category.toUpperCase()} ${comp.socket ? `[${comp.socket}]` : ""} ${comp.wattage ? comp.wattage+"W" : ""} ${comp.capacity ? comp.capacity+"GB" : ""}</span>
-                <span class="comp-price">${formatRupiah(comp.price)}</span>
-            </div>
-            <div class="card-buttons">
-                <button class="install-from-storage-btn">🔧 Pasang</button>
-                <button class="sell-storage-btn">💰 Jual (50% harga)</button>
-            </div>
-        `;
-        const installBtn = card.querySelector(".install-from-storage-btn");
-        const sellBtn = card.querySelector(".sell-storage-btn");
-        installBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            installComponent(comp, "storage");
-            // Hapus dari storage hanya jika berhasil dipasang (fungsi install akan menambah ke storage jika ada penggantian, tetapi komponen sumber harus dihapus)
-            // Karena installComponent akan memanggil addComponentToStorage jika ada penggantian, tapi komponen asli dari storage harus dihapus.
-            // Kita perlu menghapus setelah berhasil. installComponent mengembalikan true jika berhasil.
-            if (installComponent(comp, "storage")) {
-                // Hapus dari inventory
-                removeComponentFromStorage(idx);
-                renderStorage(); // re-render
-            }
-        });
-        sellBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const sellPrice = Math.floor(comp.price * 0.5);
-            if (confirm(`Jual ${comp.name} seharga ${formatRupiah(sellPrice)}?`)) {
-                playerMoney += sellPrice;
-                removeComponentFromStorage(idx);
-                updateUIStats();
-                saveGame();
-                showTemporaryMessage(`Terjual ${comp.name}`, "#3a6e4a");
-            }
         });
         container.appendChild(card);
     });
@@ -396,7 +352,6 @@ function showTemporaryMessage(msg, bg) {
     const msgDiv = document.getElementById("gameMessage");
     msgDiv.innerHTML = msg;
     msgDiv.style.background = bg;
-    msgDiv.style.opacity = "1";
     setTimeout(() => {
         if (document.getElementById("gameMessage").innerHTML === msg) updateCompatibilityMessage();
     }, 2500);

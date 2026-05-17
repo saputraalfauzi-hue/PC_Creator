@@ -20,7 +20,6 @@ function generateClients() {
         let minRam = minRamOptions[Math.floor(Math.random() * minRamOptions.length)];
         let minGpuTier = minGpuTiers[Math.floor(Math.random() * minGpuTiers.length)];
         
-        // Penyesuaian logika berdasarkan usage
         if (usage === "gaming" && minGpuTier === "low") minGpuTier = "mid";
         if (usage === "streaming" && minGpuTier === "low") minGpuTier = "high";
         if (usage === "design" && minGpuTier === "low") minGpuTier = "mid";

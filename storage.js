@@ -1,4 +1,4 @@
-let inventory = []; // array komponen yang dimiliki (selain yang dipasang)
+let inventory = [];
 
 function loadStorage() {
     const saved = localStorage.getItem("pcCreatorInventory");
@@ -22,12 +22,23 @@ function addComponentToStorage(comp) {
 
 function removeComponentFromStorage(index) {
     if (index >= 0 && index < inventory.length) {
-        const removed = inventory.splice(index, 1)[0];
+        inventory.splice(index, 1);
         saveStorage();
         renderStorage();
-        return removed;
+        return true;
     }
-    return null;
+    return false;
+}
+
+function removeComponentFromStorageById(compId) {
+    const index = inventory.findIndex(c => c.id === compId);
+    if (index !== -1) {
+        inventory.splice(index, 1);
+        saveStorage();
+        renderStorage();
+        return true;
+    }
+    return false;
 }
 
 function renderStorage() {
@@ -41,18 +52,38 @@ function renderStorage() {
     inventory.forEach((comp, idx) => {
         const card = document.createElement("div");
         card.className = "comp-card";
-        card.setAttribute("draggable", "true");
-        card.setAttribute("data-component-idx", idx);
-        card.setAttribute("data-from", "storage");
+        card.setAttribute("data-storage-idx", idx);
         card.innerHTML = `
             <div class="comp-name">${comp.name}</div>
             <div class="comp-details">
                 <span>${comp.category.toUpperCase()} ${comp.socket ? `[${comp.socket}]` : ""} ${comp.wattage ? comp.wattage+"W" : ""} ${comp.capacity ? comp.capacity+"GB" : ""}</span>
                 <span class="comp-price">${formatRupiah(comp.price)}</span>
             </div>
+            <div class="card-buttons">
+                <button class="install-from-storage-btn" data-id="${comp.id}">🔧 Pasang</button>
+                <button class="sell-storage-btn" data-id="${comp.id}">💰 Jual (50%)</button>
+            </div>
         `;
-        card.addEventListener("dragstart", handleDragStart);
-        card.addEventListener("dragend", handleDragEnd);
         container.appendChild(card);
+    });
+    document.querySelectorAll(".install-from-storage-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const compId = btn.getAttribute("data-id");
+            const comp = inventory.find(c => c.id === compId);
+            if (comp && typeof installComponentFromStorage === "function") {
+                installComponentFromStorage(comp);
+            }
+        });
+    });
+    document.querySelectorAll(".sell-storage-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const compId = btn.getAttribute("data-id");
+            const comp = inventory.find(c => c.id === compId);
+            if (comp && typeof sellComponentFromStorage === "function") {
+                sellComponentFromStorage(comp);
+            }
+        });
     });
 }

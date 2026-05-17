@@ -1,5 +1,4 @@
 function generateComponents() {
-    // CPU
     const cpus = [];
     const cpusData = [
         { name: "Intel Celeron G6900", socket: "LGA1700", price: 650000, power: 46, tier: "low" },
@@ -27,7 +26,6 @@ function generateComponents() {
     ];
     cpusData.forEach((c, i) => cpus.push({ id: `cpu${i+1}`, category: "cpu", ...c }));
 
-    // Motherboard
     const motherboards = [];
     const moboData = [
         { name: "H610M (LGA1700)", socket: "LGA1700", price: 950000, power: 25 },
@@ -46,7 +44,6 @@ function generateComponents() {
     ];
     moboData.forEach((m, i) => motherboards.push({ id: `mobo${i+1}`, category: "motherboard", ...m }));
 
-    // RAM
     const rams = [];
     const ramData = [
         { name: "DDR4 8GB (1x8)", price: 450000, power: 8, capacity: 8, ramType: "DDR4" },
@@ -60,7 +57,6 @@ function generateComponents() {
     ];
     ramData.forEach((r, i) => rams.push({ id: `ram${i+1}`, category: "ram", ...r }));
 
-    // GPU
     const gpus = [];
     const gpuData = [
         { name: "GT 1030", price: 1250000, power: 30, tier: "low" },
@@ -88,7 +84,6 @@ function generateComponents() {
     ];
     gpuData.forEach((g, i) => gpus.push({ id: `gpu${i+1}`, category: "gpu", ...g }));
 
-    // Storage
     const storages = [];
     const storageData = [
         { name: "SSD SATA 240GB", price: 350000, power: 3, storageType: "SATA" },
@@ -106,7 +101,6 @@ function generateComponents() {
     ];
     storageData.forEach((s, i) => storages.push({ id: `storage${i+1}`, category: "storage", ...s }));
 
-    // PSU
     const psus = [];
     const psuData = [
         { name: "400W 80+ White", wattage: 400, price: 450000 },
@@ -122,7 +116,6 @@ function generateComponents() {
     ];
     psuData.forEach((p, i) => psus.push({ id: `psu${i+1}`, category: "psu", ...p }));
 
-    // Tambahan untuk mencapai 120 komponen (extra)
     const extraCpus = [
         { name: "Intel Core i5-12600K", socket: "LGA1700", price: 3650000, power: 125, tier: "high" },
         { name: "Intel Core i7-11700K", socket: "LGA1200", price: 4250000, power: 125, tier: "high" },
@@ -155,9 +148,7 @@ function generateComponents() {
     ];
     extraPsus.forEach((p, i) => psus.push({ id: `psu${psus.length+1+i}`, category: "psu", ...p }));
 
-    // Gabungkan semua
     let all = [...cpus, ...motherboards, ...rams, ...gpus, ...storages, ...psus];
-    // Jika masih kurang dari 120, duplikasi dengan nama berbeda
     while (all.length < 120) {
         const original = all[all.length % all.length];
         const clone = { ...original, id: `dup${all.length}`, name: original.name + " (edisi khusus)" };
